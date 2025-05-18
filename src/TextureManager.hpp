@@ -5,12 +5,16 @@
 #include <unordered_map>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <toml.hpp>
 
 using string = std::string;
 using runtime_error = std::runtime_error;
 template <typename A, typename B>
 using unordered_map = std::unordered_map<A, B>;
 using ifstream = std::ifstream;
+
+typedef string FilePath;
+typedef string EntityName;
 
 class TextureManager {
 public:
@@ -41,7 +45,8 @@ public:
     }
 private:
     TextureManager() {
-        ifstream istream{"data/textures.json"};
+        auto texture_data = toml::parse("data/textures.toml");
+        
     }
     ~TextureManager() {
         for (auto& [_, texture] : _textures) {
@@ -52,7 +57,7 @@ private:
     }
 
 private:
-    unordered_map<string, SDL_Texture*> _textures;
-    string _texture_root_dir;
-    unordered_map<string, string> _entity_to_texture_filepath;
+    unordered_map<EntityName, SDL_Texture*> _textures;
+    FilePath _texture_root_dir;
+    unordered_map<EntityName, FilePath> _entity_file_paths;
 };

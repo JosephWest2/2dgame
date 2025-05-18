@@ -9,6 +9,7 @@ add_subdirectory(external/toml11)
 
 add_executable(2dgame src/main.cpp)
 target_include_directories(2dgame
+    PRIVATE src
     PRIVATE external/sdl/include
     PRIVATE external/sdl_image/include
     PRIVATE toml11

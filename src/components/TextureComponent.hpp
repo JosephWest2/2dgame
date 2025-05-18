@@ -4,16 +4,15 @@
 
 using string = std::string;
 
-
 class TextureComponent {
 public:
-    TextureComponent(string texture_filepath)
-        : _texture_filepath{texture_filepath}{}
+    TextureComponent(string entity_name)
+        : _entity_name{entity_name}{}
 
-    string GetFilePath() {
-        return _texture_filepath;
+    string GetEntityName() {
+        return _entity_name;
     }
 
 private:
-   string _texture_filepath; 
+   string _entity_name; 
 };
