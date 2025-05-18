@@ -6,7 +6,7 @@ project(2dshooter VERSION 1.0)
 add_subdirectory(external/sdl)
 add_subdirectory(external/sdl_image)
 
-add_executable(2dshooter main.cpp)
+add_executable(2dshooter src/main.cpp)
 target_include_directories(2dshooter
     PRIVATE external/sdl/include
     PRIVATE external/sdl_image/include
