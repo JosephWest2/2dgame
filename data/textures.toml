@@ -1,0 +1,4 @@
+root: "res/textures"
+
+[entities]
+player: "player/player.png"

@@ -1,6 +1,0 @@
-{
-    "texture_root_dir": "res/textures",
-    "entities" {
-        "player": "player/player.png"
-    }
-}
