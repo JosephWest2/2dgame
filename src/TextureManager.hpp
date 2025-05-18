@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include <toml.hpp>
 
 using string = std::string;
 using runtime_error = std::runtime_error;
@@ -45,7 +44,6 @@ public:
     }
 private:
     TextureManager() {
-        auto texture_data = toml::parse("data/textures.toml");
         
     }
     ~TextureManager() {

@@ -1,0 +1,7 @@
+{
+    "root": "res/textures",
+    "entities": {
+        "player": "player/player.png",
+        "skeleton": "seleton/skeleton.png"
+    }
+}

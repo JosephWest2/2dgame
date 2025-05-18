@@ -5,17 +5,17 @@ project(2dgame VERSION 1.0)
 
 add_subdirectory(external/sdl)
 add_subdirectory(external/sdl_image)
-add_subdirectory(external/toml11)
+add_subdirectory(external/json)
 
 add_executable(2dgame src/main.cpp)
 target_include_directories(2dgame
     PRIVATE src
     PRIVATE external/sdl/include
     PRIVATE external/sdl_image/include
-    PRIVATE toml11
+    PRIVATE nlohmann_json
 )
 target_link_libraries(2dgame
     PRIVATE SDL3::SDL3
     PRIVATE SDL3_image::SDL3_image
-    PRIVATE toml11
+    PRIVATE nlohmann_json
 )
