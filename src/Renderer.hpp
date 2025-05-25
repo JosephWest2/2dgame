@@ -1,24 +1,20 @@
 #pragma once
-#include <SDL3_image/SDL_image.h>
+#include "structures/RenderTexture.hpp"
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 #include <stdexcept>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include "Level.hpp"
-#include "structures/RenderTexture.hpp"
+#include <vector>
 
-using std::string;
 using std::runtime_error;
+using std::string;
 using std::unordered_map;
 using std::vector;
 
 class Renderer {
-public:
-    Renderer(string window_title)
-        : _window{nullptr}
-        , _renderer{nullptr}
-        , _surface{nullptr} {
+  public:
+    Renderer(string window_title) : _window{nullptr}, _renderer{nullptr} {
         _window = SDL_CreateWindow(window_title.c_str(), 640, 480, 0);
         if (_window == nullptr) {
             throw runtime_error("failed to create window: " + string(SDL_GetError()));
@@ -43,8 +39,8 @@ public:
         }
         SDL_RenderPresent(_renderer);
     }
-private:
+
+  private:
     SDL_Window* _window;
     SDL_Renderer* _renderer;
-    SDL_Surface* _surface;
 };

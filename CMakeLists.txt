@@ -7,7 +7,7 @@ add_subdirectory(external/sdl)
 add_subdirectory(external/sdl_image)
 add_subdirectory(external/json)
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
-add_executable(2dgame ${SOURCE_FILES})
+add_executable(2dgame src/main.cpp)
 target_include_directories(2dgame
     PRIVATE src
     PRIVATE external/sdl/include
