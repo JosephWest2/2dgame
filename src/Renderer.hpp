@@ -3,12 +3,15 @@
 #include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include <unordered_map>
+#include "Level.hpp"
+#include "structures/RenderTexture.hpp"
 
-using string = std::string;
-using runtime_error = std::runtime_error;
-template <typename A, typename B>
-using unordered_map = std::unordered_map<A, B>;
+using std::string;
+using std::runtime_error;
+using std::unordered_map;
+using std::vector;
 
 class Renderer {
 public:
@@ -26,7 +29,6 @@ public:
         }
     }
     ~Renderer() {
-        CleanupTextures();
         if (_renderer != nullptr) {
             SDL_DestroyRenderer(_renderer);
         }
@@ -34,45 +36,14 @@ public:
             SDL_DestroyWindow(_window);
         }
     }
-    SDL_Texture* LoadTexture(const char* file_path) {
-        SDL_Texture* texture = nullptr;
-        texture = IMG_LoadTexture(_renderer, file_path);
-        return texture;
-    }
-    void LoadTextures() {
-        _textures["player"] = LoadTexture("res/Cute_Fantasy_Free/Player/Player.png");
-        if (_textures["player"] == nullptr) {
-            throw runtime_error("failed to load player texture");
-        }
-    }
-    void CleanupTextures() {
-        for (auto& [_, texture] : _textures) {
-            SDL_DestroyTexture(texture);
-        }
-        _textures.clear();
-    }
-    void RenderFrame() {
+    void RenderFrame(vector<RenderTexture>& textures) {
         SDL_RenderClear(_renderer);
-
-        SDL_FRect player_sprite_rect{
-            .x = 0.f,
-            .y = 0.f,
-            .w = 32.f,
-            .h = 32.f
-        };
-        SDL_FRect player_screen_space_location{
-            .x = 50.f,
-            .y = 50.f,
-            .w = 100.f,
-            .h = 100.f
-        };
-        SDL_RenderTexture(_renderer, _textures["player"], &player_sprite_rect, &player_screen_space_location);
-        SDL_FRect r{10.f, 10.f, 50.f, 50.f};
-        SDL_RenderRect(_renderer, &r);
+        for (const auto& texture : textures) {
+            SDL_RenderTexture(_renderer, texture.texture, &texture.dst, &texture.dst);
+        }
         SDL_RenderPresent(_renderer);
     }
 private:
-    unordered_map<string, SDL_Texture*> _textures;
     SDL_Window* _window;
     SDL_Renderer* _renderer;
     SDL_Surface* _surface;

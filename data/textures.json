@@ -1,7 +1,10 @@
 {
     "root": "res/textures",
-    "entities": {
+    "names": {
         "player": "player/player.png",
-        "skeleton": "seleton/skeleton.png"
+        "skeleton": "seleton/skeleton.png",
+        "fireball": "fireball.png",
+        "grass": "outdoor/grass.png",
+        "dirt": "outdoor/dirt.png"
     }
 }

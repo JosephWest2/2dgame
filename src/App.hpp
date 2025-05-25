@@ -22,10 +22,9 @@ public:
         SDL_Quit();
     }
     void Run() {
-        _renderer->LoadTextures();
         while (!_should_quit) {
             PollEvents();
-            _renderer->RenderFrame();
+            _renderer->RenderFrame(_level);
         }
     }
     void PollEvents() {
@@ -42,4 +41,5 @@ private:
     bool _should_quit;
     GameState _game_state;
     Renderer* _renderer;
+    Level _level;
 };

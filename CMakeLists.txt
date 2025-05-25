@@ -6,13 +6,13 @@ project(2dgame VERSION 1.0)
 add_subdirectory(external/sdl)
 add_subdirectory(external/sdl_image)
 add_subdirectory(external/json)
-
-add_executable(2dgame src/main.cpp)
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
+add_executable(2dgame ${SOURCE_FILES})
 target_include_directories(2dgame
     PRIVATE src
     PRIVATE external/sdl/include
     PRIVATE external/sdl_image/include
-    PRIVATE nlohmann_json
+    PRIVATE nlohmann_json/include
 )
 target_link_libraries(2dgame
     PRIVATE SDL3::SDL3
