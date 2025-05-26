@@ -7,18 +7,28 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 using namespace std;
 
 constexpr int PLAYER_SPRITE_SIZE = 32;
+constexpr int SKELETON_SPRITE_SIZE = 32;
 constexpr int FIREBALL_SPRITE_SIZE = 128;
 constexpr SDL_FRect DEFAULT_PLAYER_SPRITE = {0, 0, PLAYER_SPRITE_SIZE, PLAYER_SPRITE_SIZE};
+constexpr SDL_FRect DEFAULT_SKELETON_SPRITE = {0, 0, SKELETON_SPRITE_SIZE, SKELETON_SPRITE_SIZE};
 
-constexpr string PLAYER_KEY = "player";
-constexpr string GRASS_KEY = "grass";
-constexpr string FIREBALL_KEY = "fireball";
-constexpr string OAK_TREE_KEY = "oak_tree";
-constexpr string DIRT_KEY = "dirt";
+#define PLAYER_KEY "player"
+#define GRASS_KEY "grass"
+#define FIREBALL_KEY "fireball"
+#define OAK_TREE_KEY "oak_tree"
+#define DIRT_KEY "dirt"
+#define SKELETON_KEY "skeleton"
+
+#define PLAYER_TEXTURE "res/textures/player/player.png"
+#define GRASS_TEXTURE "res/textures/outdoor/grass.png"
+#define DIRT_TEXTURE "res/textures/outdoor/dirt.png"
+#define OAK_TREE_TEXTURE "res/textures/outdoor/oak_tree.png"
+#define SKELETON_TEXTURE "res/textures/enemies/skeleton.png"
 
 ostream& operator<<(ostream& os, const SDL_FRect& frect) {
     os << frect.x << ',' << frect.y << ',' << frect.w << ',' << frect.h << endl;
@@ -55,8 +65,8 @@ class Camera {
 
 class IEntity;
 
-vector<IEntity*>* EntityRegistry() {
-    static auto instance = new vector<IEntity*>{};
+vector<weak_ptr<IEntity>>* EntityRegistry() {
+    static auto instance = new vector<weak_ptr<IEntity>>{};
     return instance;
 }
 
@@ -75,17 +85,17 @@ struct EntityComponent {
     }
 };
 
-class IEntity {
+class IEntity : public enable_shared_from_this<IEntity> {
   public:
-    IEntity() { EntityRegistry()->push_back(this); }
+    IEntity() { EntityRegistry()->push_back(shared_from_this()); }
     virtual EntityComponent& GetEntityComponent() = 0;
-    virtual constexpr const string& GetEntityKey() = 0;
+    virtual const string& GetEntityKey() = 0;
 };
 
 class ICollision;
 
-vector<ICollision*>* CollisionRegistry() {
-    static auto instance = new vector<ICollision*>{};
+vector<weak_ptr<ICollision>>* CollisionRegistry() {
+    static auto instance = new vector<weak_ptr<ICollision>>{};
     return instance;
 }
 
@@ -93,20 +103,42 @@ struct CollisionComponent {
     SDL_FRect collision_bounds{};
 };
 
-class ICollision {
+class ICollision : public enable_shared_from_this<ICollision> {
   public:
-    ICollision() { CollisionRegistry()->push_back(this); }
+    ICollision() { CollisionRegistry()->push_back(shared_from_this()); }
     virtual CollisionComponent& GetCollisionComponent() = 0;
 };
 
 class Player : public IEntity, public ICollision {
   public:
-    virtual EntityComponent& GetEntityComponent() { return _entity_component; }
-    virtual constexpr const string& GetEntityKey() { return PLAYER_KEY; }
-    virtual CollisionComponent& GetCollisionComponent() { return _collision_component; }
+    Player(Vec2 position) : _entity_component{position, 100, 100, DEFAULT_PLAYER_SPRITE} {};
+    virtual EntityComponent& GetEntityComponent() override { return _entity_component; }
+    virtual const string& GetEntityKey() override {
+        static string name = PLAYER_KEY;
+        return name;
+    }
+    virtual CollisionComponent& GetCollisionComponent() override { return _collision_component; }
 
   private:
     EntityComponent _entity_component{{100, 100}, 100, 100, DEFAULT_PLAYER_SPRITE};
+    CollisionComponent _collision_component{100, 100};
+};
+
+class Skeleton : public IEntity, public ICollision {
+  public:
+    Skeleton(Vec2 position) : _entity_component{position, 100, 100, DEFAULT_SKELETON_SPRITE} {};
+    virtual EntityComponent& GetEntityComponent() override { return _entity_component; };
+    virtual const string& GetEntityKey() override {
+        static string name = SKELETON_KEY;
+        return name;
+    };
+    virtual CollisionComponent& GetCollisionComponent() override { return _collision_component; };
+
+  private:
+    EntityComponent _entity_component{.position = {200, 200},
+                                      .texture_width = 100,
+                                      .texture_height = 100,
+                                      .sprite_src = DEFAULT_SKELETON_SPRITE};
     CollisionComponent _collision_component{100, 100};
 };
 
@@ -117,37 +149,43 @@ class App {
             throw runtime_error("failed to init SDL: " + string(SDL_GetError()));
         }
         _window = SDL_CreateWindow(window_title.c_str(), 640, 480, 0);
-        if (_window == nullptr) {
+        if (!_window) {
             throw runtime_error("failed to create window: " + string(SDL_GetError()));
         }
         _renderer = SDL_CreateRenderer(_window, nullptr);
-        if (_renderer == nullptr) {
+        if (!_renderer) {
             throw runtime_error("failed to create renderer: " + string(SDL_GetError()));
         }
         LoadTextures();
+        LoadEnemies();
+    }
+    void LoadEnemies() {
+        for (int i = 0; i < 5; i++) {
+            _skeletons.push_back(make_shared<Skeleton>(Vec2{i * 50,i * 50}));
+        };
     }
     ~App() {
         for (const auto& [_, texture] : _textures) {
             SDL_DestroyTexture(texture);
         }
-        if (_renderer != nullptr) {
+        if (_renderer) {
             SDL_DestroyRenderer(_renderer);
         }
-        if (_window != nullptr) {
+        if (_window) {
             SDL_DestroyWindow(_window);
         }
         SDL_Quit();
     }
     void LoadTextures() {
-        _textures[PLAYER_KEY] = LoadTextureFile("res/textures/player/player.png");
-        _textures[FIREBALL_KEY] = LoadTextureFile("res/textures/fireball.png");
-        _textures[GRASS_KEY] = LoadTextureFile("res/textures/outdoor/grass.png");
-        _textures[DIRT_KEY] = LoadTextureFile("res/textures/outdoor/dirt.png");
-        _textures[OAK_TREE_KEY] = LoadTextureFile("res/textures/outdoor/oak_tree.png");
+        _textures[PLAYER_KEY] = LoadTextureFile(PLAYER_TEXTURE);
+        _textures[GRASS_KEY] = LoadTextureFile(GRASS_TEXTURE);
+        _textures[DIRT_KEY] = LoadTextureFile(DIRT_TEXTURE);
+        _textures[OAK_TREE_KEY] = LoadTextureFile(OAK_TREE_TEXTURE);
+        _textures[SKELETON_KEY] = LoadTextureFile(SKELETON_TEXTURE);
     }
     SDL_Texture* LoadTextureFile(string file_path) {
         auto texture = IMG_LoadTexture(_renderer, file_path.c_str());
-        if (texture == nullptr) {
+        if (!texture) {
             throw runtime_error("failed to load texture: " + file_path);
         }
         return texture;
@@ -163,10 +201,12 @@ class App {
     }
     unordered_map<SDL_Texture*, vector<TextureInstance>> PrepareTextureInstances() {
         unordered_map<SDL_Texture*, vector<TextureInstance>> output{};
-        for (const auto& entity : *EntityRegistry()) {
-            EntityComponent& ec = entity->GetEntityComponent();
-            output[_textures[entity->GetEntityKey()]].push_back(
-                {ec.sprite_src, ec.SpriteDst(), ec.rotation, ec.flip_mode});
+        for (const auto& entity_wp : *EntityRegistry()) {
+            if (auto entity_sp = entity_wp.lock()) {
+                EntityComponent& ec = entity_sp->GetEntityComponent();
+                output[_textures[entity_sp->GetEntityKey()]].push_back(
+                    {ec.sprite_src, ec.SpriteDst(), ec.rotation, ec.flip_mode});
+            }
         }
         return output;
     }
@@ -200,5 +240,6 @@ class App {
     chrono::high_resolution_clock::time_point _last_frame_time{
         chrono::high_resolution_clock::now()};
     chrono::duration<double> _delta_time{};
-    Player _player{};
+    shared_ptr<Player> _player{make_shared<Player>(Vec2{100, 100})};
+    vector<shared_ptr<Skeleton>> _skeletons{};
 };
